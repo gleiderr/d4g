@@ -1,0 +1,66 @@
+text {
+    fill: white;
+}
+
+h3 {
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: 0em;
+}
+
+p {
+    font-size: 14px;
+    line-height: 1.5em;
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: .5em;
+}
+
+.vidaAdao {
+    fill: brown;
+    background: brown;
+    color: white;
+}
+.vidaSete {
+    fill: chocolate;
+    background: chocolate;
+    color: white;
+}
+.vidaEnos {
+    fill: darkgoldenrod;
+    background: darkgoldenrod;
+    color: white;
+}
+.vidaCaina {
+    fill: darkorange;
+    background: darkorange;
+    color: white;
+}
+.vidaMaalaleel {
+    fill: orange;
+    background: orange;
+    color: white;
+}
+.vidaJarede {
+    fill: goldenrod;
+    background: goldenrod;
+    color: white;
+}
+.vidaEnoque {
+    fill: tomato;
+    background: tomato;
+    color: white;
+}
+.vidaMatusalem {
+    fill: sienna;
+    background: sienna;
+    color: white;
+}
+.vidaLameque {
+    fill: saddlebrown;
+    background: saddlebrown;
+    color: white;
+}
+.vidaNoe {
+    fill: orangered;
+    background: orangered;
+    color: white;
+}
