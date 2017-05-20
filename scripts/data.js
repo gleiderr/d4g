@@ -13,10 +13,14 @@ class Expressao {
     }
 
     or(e) {
-        return new Expressao(this.exp + '|' + e.exp, this.flags);
+        if(e instanceof Expressao)
+            e = e.exp;
+        return new Expressao(this.exp + '|' + e, this.flags);
     }
 
     prefix(p) {
+        if(p instanceof Expressao)
+            p = p.exp;
         return new Expressao(p + this.exp, this.flags);
     }
 
