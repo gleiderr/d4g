@@ -12,26 +12,29 @@ class Expressao {
         }
     }
 
+    convert(e) {
+        if(e instanceof RegExp)
+            return e.source;
+        else if(e instanceof Expressao)
+            return e.exp;
+        else
+            return e;
+    }
+
     or(e) {
-        if(e instanceof Expressao)
-            e = e.exp;
-        return new Expressao(this.exp + '|' + e, this.flags);
+        return new Expressao(this.exp + '|' + this.convert(e), this.flags);
     }
 
     prefix(p) {
-        if(p instanceof Expressao)
-            p = p.exp;
-        return new Expressao(p + this.exp, this.flags);
+        return new Expressao(this.convert(p) + this.exp, this.flags);
     }
 
     sufix(s) {
-        if(s instanceof Expressao)
-            s = s.exp;
-        return new Expressao(this.exp + s, this.flags);
+        return new Expressao(this.exp + this.convert(s), this.flags);
     }
 
     afix(pre, suf) {
-        return new Expressao(pre + this.exp + suf, this.flags);
+        return new Expressao(this.convert(pre) + this.exp + this.convert(suf), this.flags);
     }
 
     setFlags(f) {
@@ -44,6 +47,10 @@ class Expressao {
 
     test(str) {
         return this.regexp.test(str);
+    }
+
+    exec(str) {
+        return this.regexp.exec(str);
     }
 }
 
@@ -149,3 +156,29 @@ dataEventos = [
     { id: "saidaEgito",     data: "15/1/0", label: "Saída do Egito",     regexp: /Saída do Egito/},
     { id: "nascimentoSete", data: "15/1/0", label: "Nascimento de Sete", regexp: /Nascimento de Sete/i},
 ];
+
+dataTribos = [
+    { id: 'triboRuben', nome: 'Rúben'},
+    { id: 'triboSimeao', nome: 'Simeão' },
+    { id: 'triboJuda', nome: 'Judá' },
+    { id: 'triboIssacar', nome: 'Issacar' },
+    { id: 'triboZebulom', nome: 'Zebulom' },
+    { id: 'triboEfraim', nome: 'Efraim' },
+    { id: 'triboManasses', nome: 'Manassés' },
+    { id: 'triboBenjamim', nome: 'Benjamim' },
+    { id: 'triboDa', nome: 'Dã' },
+    { id: 'triboAser', nome: 'Aser' },
+    { id: 'triboGade', nome: 'Gade' },
+    { id: 'triboNaftali', nome: 'Naftali' },
+    { id: 'triboLevi', nome: 'Levi', regexp: /Levi|[lL]evitas/},
+];
+dataTribos.forEach(function(tribo) {
+    var prefix = new Expressao('tribo de ').or('descendentes de ').or('de ').or('filhos de ')
+                                                                      .afix('(?:', ')?');
+    var sufix = new Expressao(', foram recenseados ').or(' foi ').afix('(?:', ')')
+                                                          .sufix(/([\d\.]*\b)(?: homens)?/);
+    if(!tribo.regexp)
+        tribo.regexp = new Expressao(tribo.nome, 'g').prefix(prefix).sufix(sufix);
+    else
+        tribo.regexp = new Expressao(tribo.regexp, 'g').prefix(prefix).sufix(sufix);
+});
