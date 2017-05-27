@@ -8,10 +8,10 @@ h3 {
 }
 
 p {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.5em;
     -webkit-margin-before: 0em;
-    -webkit-margin-after: .5em;
+    -webkit-margin-after: 0em;
 }
 
 .vidaAdao {
@@ -62,5 +62,71 @@ p {
 .vidaNoe {
     fill: orangered;
     background: orangered;
+    color: white;
+}
+
+.triboRuben {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboSimeao {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboJuda {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboIssacar {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboZebulom {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboEfraim {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboManasses {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboBenjamim {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboDa {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboAser {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboGade {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboNaftali {
+    fill: blue;
+    background: blue;
+    color: white;
+}
+.triboLevi {
+    fill: blue;
+    background: blue;
     color: white;
 }

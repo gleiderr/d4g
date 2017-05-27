@@ -43,6 +43,13 @@ class Periodo extends ItemSemantico {
         this.regexp = dado.regexp;
     }
 };
+class Tribo extends ItemSemantico {
+    constructor(dado) {
+        super(dado.id);
+        this.nome = dado.nome;
+        this.regexp = dado.regexp;
+    }
+}
 
 class ListaSemantica {
     constructor(dados) {
@@ -59,15 +66,13 @@ class ListaSemantica {
     }
 
     /* 
-    Preenche [this] ListaSemantica com objetos do tipo [classe] a partir dos trechos encontrados no [texto]. Todas as expressões regulares [regexp] dos dados são avaliadas. Ao encontrar um texto relacionado ele é substituído pela tag <span>
+    Preenche [this] ListaSemantica com objetos do tipo [classe] a partir dos trechos encontrados no [texto]. Todas as expressões regulares [regexp] dos dados são avaliadas.
     */
     preencher(texto, classe) {
         var textoNovo = String(texto);
         for (var i = 0; i < this.dados.length; i++)
-            if(this.dados[i].regexp.test(texto)) {
+            if(this.dados[i].regexp.test(texto))
                 this.add(new classe(this.dados[i]));
-                //textoNovo = textoNovo.replace(this.dados[i].regexp, "<span class='")
-            }
     }
 
     forEach(callBack, thisArg) {
@@ -192,6 +197,115 @@ class TimeLine extends ContextoSemantico {
 
         return [min, max];
     }
+
+    get element() {
+        return document.querySelector("#timeline");
+    }
+}
+
+class GraficoDeBarras extends ContextoSemantico {
+    constructor() {
+        super();
+        this.tribos = new ListaSemantica(dataTribos);
+    }
+
+    montar(texto) {
+        if(!this.testar(texto))
+            return false;
+
+        this.tribos.preencher(texto, Tribo);
+
+        this.contabilizar(texto);
+        return this;
+    }
+
+    desenhar(elem, texto) {
+        let height = 20;
+        let margin = 3;
+        var fx = d3.scaleLinear()
+                   .domain(this.range)
+                   .range([margin, elem.clientWidth - margin]);
+        var fy = d3.scaleBand()
+                   .domain(this.tribos.keys())
+                   .paddingInner(.05)
+                   .range([0, this.tribos.size * height])
+                   .round(true);
+
+        var svg = d3.select(elem)
+                    .append('svg')
+                      .attr('width', elem.clientWidth)
+                      .attr('height', this.tribos.size * height);
+
+        var g = svg.selectAll('g')
+            .data(this.tribos.values()).enter()
+            .append('g')
+              .attr('class', function(d) { return d.id; })
+              .attr("transform", function(d) {
+                    return "translate(" + fx(0) + ", " + fy(d.id) +")";
+              });
+
+        g.append('rect')
+            .attr('height', fy.bandwidth())
+            .attr('width', function(d) {
+                if(d.n)
+                    return fx(d.n) - fx(0); 
+                else
+                    return 80;
+            })
+
+        g.append('text')
+            .text(function(d) {
+                return d.nome + ' (' + (d.n ? d.n : '?') + ')'; 
+            })
+            .style("text-anchor", "initial")
+            .attr('y', fy.bandwidth()/2)
+            .attr('dy', '.35em')
+            .attr('dx', '.5em');
+
+        texto.innerHTML_ant = texto.innerHTML;
+        g.on('mouseover', function(d) {
+            let t1 = "<span class='" + d.id + "'>";
+            let t2 = "</span>";
+            texto.innerHTML = texto.innerHTML.replace(d.regexp.regexp, t1 + '$&' + t2);
+        });
+        g.on('mouseleave', function(d) {
+            texto.innerHTML = texto.innerHTML_ant;
+        });
+    }
+
+    get element() {
+        if(!document.querySelector("#bar_chart")) {
+            console.log('oi');
+            d3.select('body').append('div')
+                .attr('id', 'bar_chart');
+        }
+
+        return document.querySelector("#bar_chart");
+    }
+
+    get range() {
+        var max = 0;
+        
+        this.tribos.forEach(function(tribo) {
+            if(tribo.n > max)
+                max = tribo.n;
+        });
+
+        return [0, max];
+    }
+
+    contabilizar(texto) {
+        this.tribos.forEach(function(tribo) {
+            var num = tribo.regexp.exec(texto)[1];
+            if(num) {
+                num = num.replace('.', '');
+                num = Number.parseInt(num);
+            } else {
+                num = null;
+            }
+            tribo.n = num;
+        });
+    }
 }
 
 !function() {
@@ -199,18 +313,31 @@ class TimeLine extends ContextoSemantico {
 
     d4g = {};
     d4g.texto = document.querySelector('body').innerHTML;
-    d4g.contextos = [];
+    d4g.contextos = [
+        new TimeLine(),
+        new GraficoDeBarras(),
+    ];
 
     var c = new TimeLine();
-    if(c.montar(d4g.texto)){
-        d4g.contextos.push(c);
-        c.desenhar(document.querySelector("#timeline"), document.querySelector("#texto"));
-        //console.log(c);
-    }
+    d4g.contextos.forEach(function(c) {
+        if(c.montar(d4g.texto)){
+            var elem = c.element;
+            c.desenhar(elem, document.querySelector("#texto"));
+            //console.log(c);
+        }
+    });
+    console.log(d4g.contextos[1]);
 
-    /*for (var i = 0; i < d4g.contextos.length; i++) {
-        d4g.contextos[i].montar();
-    }*/
+    // dataTribos.forEach(function(d) {
+    //     var tribo = new Tribo(d.id, d.nome);
+
+    //     var body = document.querySelector('body');
+    //     body.innerHTML = body.innerHTML.replace(tribo.exp.regexp, '<span class="teste">$&</span>');
+    //     /*body.innerHTML = body.innerHTML.replace(tribo.exp_n.regexp, 
+    //         '<span class="teste">$&</span>(' + tribo.n(body.innerHTML) +'#)');*/
+
+    //     console.log(tribo);
+    // });
 
     console.log("Performace", performance.now() - t, "ms");
 }();

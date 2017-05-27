@@ -12,22 +12,29 @@ class Expressao {
         }
     }
 
+    convert(e) {
+        if(e instanceof RegExp)
+            return e.source;
+        else if(e instanceof Expressao)
+            return e.exp;
+        else
+            return e;
+    }
+
     or(e) {
-        return new Expressao(this.exp + '|' + e.exp, this.flags);
+        return new Expressao(this.exp + '|' + this.convert(e), this.flags);
     }
 
     prefix(p) {
-        return new Expressao(p + this.exp, this.flags);
+        return new Expressao(this.convert(p) + this.exp, this.flags);
     }
 
     sufix(s) {
-        if(s instanceof Expressao)
-            s = s.exp;
-        return new Expressao(this.exp + s, this.flags);
+        return new Expressao(this.exp + this.convert(s), this.flags);
     }
 
     afix(pre, suf) {
-        return new Expressao(pre + this.exp + suf, this.flags);
+        return new Expressao(this.convert(pre) + this.exp + this.convert(suf), this.flags);
     }
 
     setFlags(f) {
@@ -40,6 +47,10 @@ class Expressao {
 
     test(str) {
         return this.regexp.test(str);
+    }
+
+    exec(str) {
+        return this.regexp.exec(str);
     }
 }
 
@@ -146,74 +157,28 @@ dataEventos = [
     { id: "nascimentoSete", data: "15/1/0", label: "Nascimento de Sete", regexp: /Nascimento de Sete/i},
 ];
 
-dataPeriodosBkp = {
-    /* Padrão
-       id: {inicio: "", fim: "", nome: "", subPeriodos: [] },
-    */
-    anoJudaico: {
-        inicio: "1/1/0",
-        fim: "5/13/0",
-        nome: "Ano Judaico",
-        subPeriodos: ["abibe", "zive", "sivã", "tamuz", "abe", 
-                        "elul", "etanim", "bul", "quisleu", "tebete", 
-                        "sebate", "adar", "adar2"],
-    },
-    abibe:   { inicio: "1/1/0",  fim: "30/1/0",  nome: "Abibe",   subPeriodos: [] },
-    zive:    { inicio: "1/2/0",  fim: "30/2/0",  nome: "Zive",    subPeriodos: [] },
-    sivã:    { inicio: "1/3/0",  fim: "30/3/0",  nome: "Sivã",    subPeriodos: [] },
-    tamuz:   { inicio: "1/4/0",  fim: "30/4/0",  nome: "Tamuz",   subPeriodos: [] },
-    abe:     { inicio: "1/5/0",  fim: "30/5/0",  nome: "Abe",     subPeriodos: [] },
-    elul:    { inicio: "1/6/0",  fim: "30/6/0",  nome: "Elul",    subPeriodos: [] },
-    etanim:  { inicio: "1/7/0",  fim: "30/7/0",  nome: "Etanim",  subPeriodos: [] },
-    bul:     { inicio: "1/8/0",  fim: "30/8/0",  nome: "Bul",     subPeriodos: [] },
-    quisleu: { inicio: "1/9/0",  fim: "30/9/0",  nome: "Quisleu", subPeriodos: [] },
-    tebete:  { inicio: "1/10/0", fim: "30/10/0", nome: "Tebete",  subPeriodos: [] },
-    sebate:  { inicio: "1/11/0", fim: "30/11/0", nome: "Sebate",  subPeriodos: [] },
-    adar:    { inicio: "1/12/0", fim: "30/12/0", nome: "Adar",    subPeriodos: [] },
-    adar2:   { inicio: "1/13/0", fim: "5/13/0",  nome: "",        subPeriodos: [] },
-
-    anoGregoriano: {
-        inicio: "1/1/0",
-        fim: "5/13/0",
-        nome: "Ano Gregoriano",
-        subPeriodos: ["mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez", "jan", "fev", "mar2"],
-    },
-    mar:  { inicio: "1/1/0",   fim: "10/1/0",  nome: "Mar", subPeriodos: []},
-    abr:  { inicio: "11/1/0",  fim: "10/2/0",  nome: "Abr", subPeriodos: []},
-    mai:  { inicio: "11/2/0",  fim: "11/3/0",  nome: "Mai", subPeriodos: []},
-    jun:  { inicio: "12/3/0",  fim: "11/4/0",  nome: "Jun", subPeriodos: []},
-    jul:  { inicio: "12/4/0",  fim: "12/5/0",  nome: "Jul", subPeriodos: []},
-    ago:  { inicio: "13/5/0",  fim: "13/6/0",  nome: "Ago", subPeriodos: []},
-    set:  { inicio: "14/6/0",  fim: "13/7/0",  nome: "Set", subPeriodos: []},
-    out:  { inicio: "14/7/0",  fim: "14/8/0",  nome: "Out", subPeriodos: []},
-    nov:  { inicio: "15/8/0",  fim: "14/9/0",  nome: "Nov", subPeriodos: []},
-    dez:  { inicio: "15/9/0",  fim: "15/10/0", nome: "Dez", subPeriodos: []},
-    jan:  { inicio: "16/10/0", fim: "16/11/0", nome: "Jan", subPeriodos: []},
-    fev:  { inicio: "17/11/0", fim: "14/12/0", nome: "Fev", subPeriodos: []},
-    mar2: { inicio: "15/12/0", fim: "5/13/0",  nome: "Mar", subPeriodos: []},
-
-    contextoGenesis5: { inicio: "1/1/0", fim: "5/13/2006", nome: "Contexto Histórico de Gênesis 5", 
-        subPeriodos: [], 
-    },
-    vidaAdao:  { inicio: "6/1/0", fim: "6/1/930", nome: "Adão", subPeriodos: []},
-    vidaSete:  { inicio: "6/1/130", fim: "6/1/1042", nome: "Sete", subPeriodos: []},
-    vidaEnos:  { inicio: "6/1/235", fim: "6/1/1140", nome: "Enos", subPeriodos: []},
-    vidaCaina: { inicio: "6/1/325", fim: "6/1/1235", nome: "Cainã", subPeriodos: []},
-    vidaMaalaleel:  { inicio: "6/1/395", fim: "6/1/1290", nome: "Maalaleel", subPeriodos: []},
-    vidaJarede:     { inicio: "6/1/460", fim: "6/1/1422", nome: "Jarede", subPeriodos: []},
-    vidaEnoque:  { inicio: "6/1/622", fim: "6/1/987", nome: "Enoque", subPeriodos: []},
-    vidaMatusalem:  { inicio: "6/1/687", fim: "6/1/1656", nome: "Matusalém", subPeriodos: []},
-    vidaLameque:  { inicio: "6/1/874", fim: "6/1/1651", nome: "Lameque", subPeriodos: []},
-    vidaNoe:  { inicio: "6/1/1056", fim: "6/1/2006", nome: "Noé", subPeriodos: []},
-
-    contextoNumeros1: { inicio: "1/1/0", fim: "5/13/1",  nome: "Contexto Histórico de Números 1", 
-        subPeriodos: ["anoSaidaEgito","ano1Recenceamento",], 
-    },
-    anoSaidaEgito: {inicio: "1/1/0", fim: "5/13/0", nome: "Ano de saída do Egito", subPeriodos: [], },
-    ano1Recenceamento: {inicio: "1/1/1", fim: "5/13/1", nome: "Ano do primeiro Recenseamento", subPeriodos: [], },
-};
-
-dataEventosBkp = {
-    recenseamento1: { data: "1/2/1", nome: "Recenseamento"},
-    saidaEgito: { data: "15/1/0", nome: "Saída do Egito"},
-};
+dataTribos = [
+    { id: 'triboRuben', nome: 'Rúben'},
+    { id: 'triboSimeao', nome: 'Simeão' },
+    { id: 'triboJuda', nome: 'Judá' },
+    { id: 'triboIssacar', nome: 'Issacar' },
+    { id: 'triboZebulom', nome: 'Zebulom' },
+    { id: 'triboEfraim', nome: 'Efraim' },
+    { id: 'triboManasses', nome: 'Manassés' },
+    { id: 'triboBenjamim', nome: 'Benjamim' },
+    { id: 'triboDa', nome: 'Dã' },
+    { id: 'triboAser', nome: 'Aser' },
+    { id: 'triboGade', nome: 'Gade' },
+    { id: 'triboNaftali', nome: 'Naftali' },
+    { id: 'triboLevi', nome: 'Levi', regexp: /Levi|[lL]evitas/},
+];
+dataTribos.forEach(function(tribo) {
+    var prefix = new Expressao('tribo de ').or('descendentes de ').or('de ').or('filhos de ')
+                                                                      .afix('(?:', ')?');
+    var sufix = new Expressao(', foram recenseados ').or(' foi ').afix('(?:', ')')
+                                                          .sufix(/([\d\.]*\b)(?: homens)?/);
+    if(!tribo.regexp)
+        tribo.regexp = new Expressao(tribo.nome, 'g').prefix(prefix).sufix(sufix);
+    else
+        tribo.regexp = new Expressao(tribo.regexp, 'g').prefix(prefix).sufix(sufix);
+});
