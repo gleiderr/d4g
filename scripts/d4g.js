@@ -52,8 +52,9 @@ class Tribo extends ItemSemantico {
 }
 
 class ListaSemantica {
-    constructor(dados) {
+    constructor(dados, classe) {
         this.dados = dados;
+        this.classe = classe;
         this.map = new Map();
     }
 
@@ -72,7 +73,7 @@ class ListaSemantica {
         var textoNovo = String(texto);
         for (var i = 0; i < this.dados.length; i++)
             if(this.dados[i].regexp.test(texto))
-                this.add(new classe(this.dados[i]));
+                this.add(new this.classe(this.dados[i]));
     }
 
     forEach(callBack, thisArg) {
@@ -109,23 +110,44 @@ class ContextoSemantico {
     testar(texto) {
         return this.filtro.test(texto);
     }
+
+    montar(texto) {
+        if(this.testar(texto)){
+            this.listas.forEach(function(lista) {
+                lista.preencher(texto);
+            });
+            return this;
+        }
+        return false;
+    }
+
+    get element() {
+        if(!document.querySelector('#' + this.elem)) {
+            d3.select('body').append('div')
+                .attr('id', this.elem);
+        }
+
+        return document.querySelector('#' + this.elem);
+    }
+    set element(elem) {
+        this.elem = elem;
+    }
 }
 class TimeLine extends ContextoSemantico {
     constructor() {
         super();
         //this.filtro = /\banos?\b/i;
+        this.elem = 'time_line'
 
-        this.periodos = new ListaSemantica(dataPeriodos);
-        this.eventos = new ListaSemantica(dataEventos);
+        this.periodos = new ListaSemantica(dataPeriodos, Periodo);
+        this.eventos = new ListaSemantica(dataEventos, Evento);
+
+        this.listas = [
+            this.periodos,
+            this.eventos,
+        ];
     }
-    montar(texto) {
-        if(this.testar(texto)){
-            this.periodos.preencher(texto, Periodo);
-            this.eventos.preencher(texto, Evento);
-            return this;
-        }
-        return false;
-    }
+    
     desenhar(elem, texto) {
         let height = 20;
         let margin = 28;
@@ -197,26 +219,24 @@ class TimeLine extends ContextoSemantico {
 
         return [min, max];
     }
-
-    get element() {
-        return document.querySelector("#timeline");
-    }
 }
-
 class GraficoDeBarras extends ContextoSemantico {
     constructor() {
         super();
-        this.tribos = new ListaSemantica(dataTribos);
+        this.elem = 'bar_chart';
+        this.tribos = new ListaSemantica(dataTribos, Tribo);
+        this.listas = [
+            this.tribos,
+        ];
     }
 
     montar(texto) {
-        if(!this.testar(texto))
-            return false;
+        if(super.montar(texto)){
+            this.contabilizar(texto);
+            return this;
+        }
 
-        this.tribos.preencher(texto, Tribo);
-
-        this.contabilizar(texto);
-        return this;
+        return false;
     }
 
     desenhar(elem, texto) {
@@ -273,16 +293,6 @@ class GraficoDeBarras extends ContextoSemantico {
         });
     }
 
-    get element() {
-        if(!document.querySelector("#bar_chart")) {
-            console.log('oi');
-            d3.select('body').append('div')
-                .attr('id', 'bar_chart');
-        }
-
-        return document.querySelector("#bar_chart");
-    }
-
     get range() {
         var max = 0;
         
@@ -307,6 +317,14 @@ class GraficoDeBarras extends ContextoSemantico {
         });
     }
 }
+class Geografico extends ContextoSemantico {
+    constructor() {
+        super();
+        this.lugares = new ListaSemantica(dataLugares, Lugar);
+    }
+
+
+}
 
 !function() {
     var t = performance.now();
@@ -326,7 +344,6 @@ class GraficoDeBarras extends ContextoSemantico {
             //console.log(c);
         }
     });
-    console.log(d4g.contextos[1]);
 
     // dataTribos.forEach(function(d) {
     //     var tribo = new Tribo(d.id, d.nome);
