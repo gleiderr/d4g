@@ -50,6 +50,13 @@ class Tribo extends ItemSemantico {
         this.regexp = dado.regexp;
     }
 }
+class Lugar extends ItemSemantico {
+    constructor(dado) {
+        super(dado.id);
+        this.lugar = dado.lugar;
+        this.nome = dado.nome;
+    }
+}
 
 class ListaSemantica {
     constructor(dados, classe) {
@@ -320,10 +327,99 @@ class GraficoDeBarras extends ContextoSemantico {
 class Geografico extends ContextoSemantico {
     constructor() {
         super();
+        this.elem = 'geografico';
         this.lugares = new ListaSemantica(dataLugares, Lugar);
+        this.listas = [
+            this.lugares
+        ];
     }
 
+    desenhar(elem, texto) {
 
+        var elemRaiz = d3.select("#mapa");
+        var width = elem.clientWidth,
+            height = 300;
+
+        //geoOrthographic()
+        var projection = d3.geoEquirectangular()
+            .center([39, 30])
+            .scale(4300)
+            //.fitSize([width, height])
+            ;
+
+        var pathMap = d3.geoPath()
+            .projection(projection);
+        
+        var svg = d3.select(elem)
+            .append('svg');
+
+        svg.style("width", width)
+            .style("height", height)
+            .style({"background-color": "lightskyblue"});
+
+        var g = svg.selectAll('g')
+            .data(this.lugares.values()).enter()
+            .append('g');
+
+        g.append('path')
+            .attr('d', function(d) {
+                return pathMap(d.lugar);
+            })
+            .style('fill', function(d) { return 'none'; })
+            .style('stroke', function(d) { return 'black'; });
+
+        g.append('g')
+            .attr("transform", function(d) {
+                    let xy = pathMap.centroid(d.lugar);
+                    return "translate(" + xy[0] + "," + xy[1] +")";})
+            .append('text')
+            .text(function(d) {
+                //console.log(d);
+                return d.nome;
+            })
+            .style('fill', 'black')
+            .style('text-anchor', 'middle')
+            .style('font-size', '9');
+
+        /*svg.append("g")
+            .selectAll('path')
+            .data(dataMundo.features).enter()
+            .append("path")
+            .attr("d", pathMap)
+            .style('fill', function(d) { return 'none'; })
+            .style('stroke', function(d) { return 'black'; });*/
+
+        /*svg.append("g")
+            .selectAll("circle")
+            .data([[33.973333, 28.539722, "Monte Sinai"],
+                   [31.500000, 29.899722, "Egito"]]).enter()
+            .append("circle")
+            .attr("cx", function(d) {
+                return projection(d)[0];
+            })
+            .attr("cy", function(d) {
+                return projection(d)[1];
+            })
+            .attr("r", 3)
+            .style("fill", function(d) {
+                return d[2] == "Monte Sinai" ? "green" : "blue";
+            });
+
+        svg.append("g")
+            .selectAll("text")
+            .data([[33.973333, 28.539722, "Monte Sinai"],
+                   [31.500000, 29.899722, "Egito"]]).enter()
+            .append("text")
+            //.style("font-size", "0.7em")
+            .attr("x", function(d) { return projection(d)[0]; })
+            .attr("y", function(d) { return projection(d)[1]; })
+            //.attr("dy", ".35em")
+            .attr("dx", ".35em")
+            .attr("text-anchor", "begin")
+            .text(function(d) { 
+                return d[2];
+            });*/
+    }
 }
 
 !function() {
@@ -334,6 +430,7 @@ class Geografico extends ContextoSemantico {
     d4g.contextos = [
         new TimeLine(),
         new GraficoDeBarras(),
+        new Geografico()
     ];
 
     var c = new TimeLine();
