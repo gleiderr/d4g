@@ -14,6 +14,89 @@ p {
     -webkit-margin-after: 0em;
 }
 
+/* ------------------------------------ LUGARES ------------------------------------ */
+.canaa {
+    fill: blue;
+    fill-opacity: .3;
+    stroke: blue;
+    background: blue;
+}
+.desertoDePara {
+    fill: orangered;
+    fill-opacity: .3;
+    stroke: orangered;
+    background: orangered;
+}
+.desertoDeZim {
+    fill-opacity: .3;
+    fill: navy;
+    color: navy;
+    stroke: navy;
+    font-weight: bolder;
+    text-decoration: underline;
+}
+.mundo {
+    fill: goldenrod;
+    fill-opacity: .3;
+    stroke: goldenrod;
+}
+.neguebe {
+    fill: red;
+    fill-opacity: .3;
+    stroke: red;
+    background: red;
+}
+.rioJordao {
+    fill: none;
+    stroke: cyan;
+    background: cyan;
+}
+.terraDeHamate {
+    fill: darkcyan;
+    fill-opacity: .3;
+    stroke: darkcyan;
+    background: darkcyan;
+}
+/* -------------- PONTOS -------------- */
+.cades {
+    fill: darkorange;
+    fill-opacity: .5;
+    stroke: darkorange;
+    background: darkorange;
+}
+.eshcol {
+    fill: purple;
+    fill-opacity: .3;
+    stroke: purple;
+    background: purple;
+}
+.hamate {
+    fill: cyan;
+    fill-opacity: .3;
+    stroke: cyan;
+    background: cyan;
+}
+.hebrom {
+    fill: gray;
+    fill-opacity: .3;
+    stroke: gray;
+    background: gray;
+}
+.reobe {
+    fill: green;
+    fill-opacity: .5;
+    stroke: green;
+    background: green;
+}
+.zoa {
+    fill: brown;
+    fill-opacity: .3;
+    stroke: brown;
+    background: brown;
+}
+/* -------------- REGIÕES -------------- */
+
+/* ------------------------------------ PESSOAS ------------------------------------ */
 .vidaAdao {
     fill: brown;
     background: brown;

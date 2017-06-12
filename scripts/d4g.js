@@ -55,6 +55,8 @@ class Lugar extends ItemSemantico {
         super(dado.id);
         this.lugar = dado.lugar;
         this.nome = dado.nome;
+        this.cor = dado.cor;
+        this.regexp = dado.regexp;
     }
 }
 
@@ -335,17 +337,45 @@ class Geografico extends ContextoSemantico {
     }
 
     desenhar(elem, texto) {
-
-        var elemRaiz = d3.select("#mapa");
         var width = elem.clientWidth,
-            height = 300;
+            height = 340;
+
+        /* Incluir função para atribuir melhor o objeto de fitSize() abaixo.
+           Sugestão: criação de um objeto auxiliar do tipo Polygon que atribuia a área abordada.
+           Este objeto deve ser compatível com o padrão GeoJSON. 
+        y2 --------------------
+           |                  |
+           |                  |
+           |                  |
+        y1 --------------------
+           x1                 x2
+           */
+        let coord = this.lugares.values().reduce(function(obj, b, c) {
+            if(b.id == 'mundo')
+                return obj;
+
+            let bounds = d3.geoBounds(b.lugar);
+
+            obj[0][0] = bounds[0][0] < obj[0][0] ? bounds[0][0] : obj[0][0];
+            obj[0][1] = bounds[0][1] < obj[0][1] ? bounds[0][1] : obj[0][1];
+
+            obj[1][0] = bounds[1][0] > obj[1][0] ? bounds[1][0] : obj[1][0];
+            obj[1][1] = bounds[1][1] > obj[1][1] ? bounds[1][1] : obj[1][1];
+
+            return obj;
+        }, [[Number.MAX_VALUE, Number.MAX_VALUE], [Number.MIN_VALUE, Number.MIN_VALUE]]);
+        let dx = coord[1][0] - coord[0][0];
+        let dy = coord[1][1] - coord[0][1];
+        coord[0][0] -= 0.05 * dx;
+        coord[1][0] += 0.05 * dx;
+        coord[0][1] -= 0.05 * dy;
+        coord[1][1] += 0.05 * dy;
+
+        let fitSize = {"type":"LineString","coordinates": coord};
 
         //geoOrthographic()
         var projection = d3.geoEquirectangular()
-            .center([39, 30])
-            .scale(4300)
-            //.fitSize([width, height])
-            ;
+            .fitSize([width, height], fitSize);
 
         var pathMap = d3.geoPath()
             .projection(projection);
@@ -354,71 +384,121 @@ class Geografico extends ContextoSemantico {
             .append('svg');
 
         svg.style("width", width)
-            .style("height", height)
-            .style({"background-color": "lightskyblue"});
+            .style("height", height);
 
         var g = svg.selectAll('g')
             .data(this.lugares.values()).enter()
             .append('g');
 
+        var initStroke = function() {
+            g.style('stroke-width', function(d) {
+                if(d.lugar.type === 'LineString')
+                    return 1;
+                return 0;
+            });
+        };
+        initStroke();
+
         g.append('path')
             .attr('d', function(d) {
                 return pathMap(d.lugar);
             })
-            .style('fill', function(d) { return 'none'; })
-            .style('stroke', function(d) { return 'black'; });
+            .attr('class', function(d) { return d.id; });
 
         g.append('g')
             .attr("transform", function(d) {
                     let xy = pathMap.centroid(d.lugar);
                     return "translate(" + xy[0] + "," + xy[1] +")";})
-            .append('text')
-            .text(function(d) {
-                //console.log(d);
-                return d.nome;
+            .style('display', function(d) {
+                if(d.lugar.type === 'Polygon')
+                    return 'none';
+                else
+                    return 'block';
             })
+            .append('text')
+            .text(function(d) { return d.nome; })
+            .style('fill', 'black')
+            .style('text-anchor', function(d) {
+                if(d.lugar.type === 'LineString')
+                    return 'left'
+                return 'middle';
+            })
+            .style('font-size', '9')
+            .style('cursor', 'default');
+
+        var legenda = svg.append('g')
+            .append('text')
             .style('fill', 'black')
             .style('text-anchor', 'middle')
-            .style('font-size', '9');
+            .style('font-size', '9')
+            .style('cursor', 'default');
 
-        /*svg.append("g")
-            .selectAll('path')
-            .data(dataMundo.features).enter()
-            .append("path")
-            .attr("d", pathMap)
-            .style('fill', function(d) { return 'none'; })
-            .style('stroke', function(d) { return 'black'; });*/
 
-        /*svg.append("g")
-            .selectAll("circle")
-            .data([[33.973333, 28.539722, "Monte Sinai"],
-                   [31.500000, 29.899722, "Egito"]]).enter()
-            .append("circle")
-            .attr("cx", function(d) {
-                return projection(d)[0];
-            })
-            .attr("cy", function(d) {
-                return projection(d)[1];
-            })
-            .attr("r", 3)
-            .style("fill", function(d) {
-                return d[2] == "Monte Sinai" ? "green" : "blue";
+        var selectText = function() {
+            let paragraph = d3.selectAll('p').nodes();
+            let mousePos = d3.mouse(this);
+            let longLat = projection.invert(mousePos);
+
+            g.each(function(d) {
+                if(d.id === 'mundo')
+                    return;
+
+                let contains = d3.geoContains(d.lugar, longLat);
+                let t1 = '<span class="' + d.id + '">';
+                let t2 = "<\/span>";
+                if(contains && !d.selected) {
+                    d.selected = true;
+                    paragraph.forEach(function(p) {
+                        if(d.regexp.test(p.innerHTML))
+                            p.innerHTML = p.innerHTML.replace(d.regexp.regexp, t1 + '$&' + t2);
+                    })
+                } else if(!contains) {
+                    d.selected = false;
+                    let e = d.regexp.afix(t1 + '(', ')' + t2);
+                    paragraph.forEach(function(p) {
+                        if(e.test(p.innerHTML))
+                            p.innerHTML = p.innerHTML.replace(e.regexp, '$1');
+                    })
+                }
+
+            });
+        }
+
+        svg.on('mousemove.selectText', selectText);
+        svg.on('mousemove.destaque', function() {
+            let mousePos = d3.mouse(this);
+            let longLat = projection.invert(mousePos);
+
+            g.style('stroke-width', function(d) {
+                if(d.id == 'mundo') 
+                    return 0;
+                if(d.lugar.type === 'LineString')
+                    return d3.geoContains(d.lugar, longLat) ? 3 : 1;
+
+                return d3.geoContains(d.lugar, longLat) ? 2 : 0;
             });
 
-        svg.append("g")
-            .selectAll("text")
-            .data([[33.973333, 28.539722, "Monte Sinai"],
-                   [31.500000, 29.899722, "Egito"]]).enter()
-            .append("text")
-            //.style("font-size", "0.7em")
-            .attr("x", function(d) { return projection(d)[0]; })
-            .attr("y", function(d) { return projection(d)[1]; })
-            //.attr("dy", ".35em")
-            .attr("dx", ".35em")
-            .attr("text-anchor", "begin")
-            .text(function(d) { 
-                return d[2];
-            });*/
+            //Controlando exibição da legenda de territórios
+            g.each(function(d) {
+                let contains = d3.geoContains(d.lugar, longLat);
+                if(d.lugar.type === 'Polygon') {
+                    if(contains) {
+                        if(!legenda.text().includes(d.nome))
+                            legenda.text(legenda.text() + ', ' + d.nome);
+                    } else {
+                        let r = new RegExp('(?:, )?' + d.nome);
+                        legenda.text(legenda.text().replace(r, ''))
+                    }
+                    legenda.text(legenda.text().replace(/^, /, ''));
+
+                    legenda.attr('transform', function() {
+                        let xy = mousePos;
+                        return "translate(" + xy[0] + "," + xy[1] +")";
+                    });
+                }
+            });
+        });
+        svg.on('mouseout', initStroke);
     }
 }
 
@@ -433,7 +513,7 @@ class Geografico extends ContextoSemantico {
         new Geografico()
     ];
 
-    var c = new TimeLine();
+    //var c = new TimeLine();
     d4g.contextos.forEach(function(c) {
         if(c.montar(d4g.texto)){
             var elem = c.element;
