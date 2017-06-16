@@ -132,6 +132,7 @@ class ContextoSemantico {
 
     get element() {
         if(!document.querySelector('#' + this.elem)) {
+            console.log(this.elem);
             d3.select('body').append('div')
                 .attr('id', this.elem);
         }
@@ -146,7 +147,7 @@ class TimeLine extends ContextoSemantico {
     constructor() {
         super();
         //this.filtro = /\banos?\b/i;
-        this.elem = 'time_line'
+        this.elem = 'time_line';
 
         this.periodos = new ListaSemantica(dataPeriodos, Periodo);
         this.eventos = new ListaSemantica(dataEventos, Evento);
@@ -159,7 +160,7 @@ class TimeLine extends ContextoSemantico {
     
     desenhar(elem, texto) {
         let height = 20;
-        let margin = 28;
+        let margin = 5;
         var fx = d3.scaleLinear()
                    .domain(this.range)
                    .range([margin, elem.clientWidth - margin]);
@@ -339,6 +340,10 @@ class Geografico extends ContextoSemantico {
     desenhar(elem, texto) {
         var width = elem.clientWidth,
             height = 340;
+
+        //Se apenas o mundo for identificado, retorna sem desenhar
+        if(this.lugares.values().length == 1)
+            return
 
         /* Incluir função para atribuir melhor o objeto de fitSize() abaixo.
            Sugestão: criação de um objeto auxiliar do tipo Polygon que atribuia a área abordada.
