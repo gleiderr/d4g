@@ -36,9 +36,9 @@ p {
     text-decoration: underline;
 }
 .mundo {
-    fill: goldenrod;
-    fill-opacity: .3;
-    stroke: goldenrod;
+    fill: moccasin;
+    fill-opacity: 1;
+    stroke: moccasin;
 }
 .neguebe {
     fill: red;

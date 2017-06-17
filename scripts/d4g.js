@@ -386,7 +386,8 @@ class Geografico extends ContextoSemantico {
             .projection(projection);
         
         var svg = d3.select(elem)
-            .append('svg');
+            .append('svg')
+            .style('background', 'cornflowerblue');
 
         svg.style("width", width)
             .style("height", height);
