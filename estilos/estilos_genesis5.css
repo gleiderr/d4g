@@ -35,6 +35,14 @@ p {
     font-weight: bolder;
     text-decoration: underline;
 }
+.egito {
+    fill-opacity: .3;
+    fill: red;
+    color: red;
+    stroke: red;
+    font-weight: bolder;
+    text-decoration: underline;
+}
 .mundo {
     fill: moccasin;
     fill-opacity: 1;
