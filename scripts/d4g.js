@@ -59,6 +59,13 @@ class Lugar extends ItemSemantico {
         this.regexp = dado.regexp;
     }
 }
+class Pessoa extends ItemSemantico {
+    constructor(dado) {
+        super(dado.id);
+        this.nome = dado.nome;
+        this.regexp = dado.regexp;
+    }
+}
 
 class ListaSemantica {
     constructor(dados, classe) {
@@ -79,7 +86,6 @@ class ListaSemantica {
     Preenche [this] ListaSemantica com objetos do tipo [classe] a partir dos trechos encontrados no [texto]. Todas as expressões regulares [regexp] dos dados são avaliadas.
     */
     preencher(texto, classe) {
-        var textoNovo = String(texto);
         for (var i = 0; i < this.dados.length; i++)
             if(this.dados[i].regexp.test(texto))
                 this.add(new this.classe(this.dados[i]));
@@ -87,6 +93,16 @@ class ListaSemantica {
 
     forEach(callBack, thisArg) {
         return this.map.forEach(callBack, thisArg);
+    }
+
+    has(key) { return this.map.has(key); }
+
+    keys() {
+        var k = [];
+        this.forEach(function(d, i) {
+            k.push(i);
+        });
+        return k;   
     }
 
     values() {
@@ -97,17 +113,12 @@ class ListaSemantica {
         return v;
     }
 
-    keys() {
-        var k = [];
-        this.forEach(function(d, i) {
-            k.push(i);
-        });
-        return k;   
-    }
 
     get size() {
         return this.map.size;
     }
+
+
 }
 
 class ContextoSemantico {
@@ -132,7 +143,6 @@ class ContextoSemantico {
 
     get element() {
         if(!document.querySelector('#' + this.elem)) {
-            console.log(this.elem);
             d3.select('body').append('div')
                 .attr('id', this.elem);
         }
@@ -507,6 +517,140 @@ class Geografico extends ContextoSemantico {
         svg.on('mouseout', initStroke);
     }
 }
+class Relacionamentos extends ContextoSemantico {
+    constructor() {
+        super();
+        this.elem = 'relacionamentos';
+        this.pessoas = new ListaSemantica(dataPessoas, Pessoa);
+        this.listas = [
+            this.pessoas,
+        ];
+    }
+
+    desenhar(elem, texto) {
+        var width = elem.clientWidth;
+        var height = width*2/3;
+
+        var forceCollide = d3.forceCollide(30);
+        var count = 0;
+        var simulation = d3.forceSimulation(this.pessoas.values())
+                           .alphaDecay(.007)
+                           .on('tick', tickActions)
+                           .on('end', function() {
+                                if(count === 0)
+                                    this.force('colide', forceCollide);
+                                if(count > 5){
+                                    this.on('end', null);
+                                    return;
+                                }
+
+                                this.restart();
+                                count++;
+                           });
+
+        var relacionamentos = this.relacionamentos();
+        var link_force = d3.forceLink(relacionamentos)
+                           .id(function(d) { return d.id; })
+                           .distance(30)
+                           .strength(function (link) {
+                                if(link.type === 'casal')
+                                    return 1;
+                                else
+                                    return .3;
+                            });
+
+        var forceManyBody = d3.forceManyBody()
+                              .strength(-120);
+
+        simulation.force('charge_force', forceManyBody)
+                  .force('center_force', d3.forceCenter(width/2, height/2))
+                  .force('link_force', link_force);
+
+        var svg = d3.select(elem)
+                    .append('svg')
+                    .style('width', width)
+                    .style('height', height);
+
+        svg.append("defs").selectAll("marker")
+            .data(["end"])      // Different link/path types can be defined here
+            .enter().append("marker")    // This section adds in the arrows
+            .attr("id", String)
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 15)
+            .attr("refY", -1.5)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5");
+
+        var path = svg.append("g")
+            .selectAll("path")
+            .data(relacionamentos)
+            .enter().append("path")
+            .attr("class", "link")
+            .attr("marker-end", function(d) {
+                if(d.type === 'casal')
+                    return null;
+                else
+                    return "url(#end)";
+            })
+            .style("fill", "none")
+            .style("stroke", function(d) {
+                if(d.type === 'casal')
+                    return 'red';
+                else
+                    return "#999";
+            })
+            .style("stroke-width", "1.5px");
+
+        var nodes = svg.append('g')
+                       .selectAll('g')
+                       .data(simulation.nodes()).enter()
+                       .append('g')
+                       .attr('id', function(d) { return d.id; });
+        nodes.append('circle')
+             .attr('r', 5);
+        nodes.append('text')
+             .text(function(d) { return d.nome; })
+             .classed('Pessoa', true)
+             .attr('dx', '.40em');
+
+        function tickActions() {
+            path.attr("d", function (d) {
+                var dx = d.target.x - d.source.x,
+                    dy = d.target.y - d.source.y,
+                    dr = Math.sqrt(dx*dx + dy*dy);
+
+                return "M" +
+                    d.source.x + "," +
+                    d.source.y + "A" +
+                    dr + ", " + dr + " 0 0,1 " +
+                    d.target.x + "," +
+                    d.target.y;
+            });
+
+            nodes.attr('transform', function(d) {
+                if(d.y < 15) d.fy = 15;
+                if(d.x < 15) d.fx = 15;
+                if(d.y > height - 15) d.fy = height - 15;
+                if(d.x > width - 15) d.fx = width - 15;
+
+                return 'translate(' + d.x + ', ' + d.y + ')';
+            });
+        }
+    }
+
+    relacionamentos() {
+        var rel = [];
+        var pessoas = this.pessoas;
+        dataRelacionamentos.forEach(function(r) {
+            if(pessoas.has(r.source) && pessoas.has(r.target))
+                rel.push(r);
+        });
+        return rel;
+    }
+}
 
 !function() {
     var t = performance.now();
@@ -516,7 +660,8 @@ class Geografico extends ContextoSemantico {
     d4g.contextos = [
         new TimeLine(),
         new GraficoDeBarras(),
-        new Geografico()
+        new Geografico(),
+        new Relacionamentos()
     ];
 
     //var c = new TimeLine();

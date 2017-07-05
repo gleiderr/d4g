@@ -86,7 +86,7 @@ p {
 }
 .hebrom {
     fill: gray;
-    fill-opacity: .3;
+    fill-opacity: 1;
     stroke: gray;
     background: gray;
 }
@@ -105,6 +105,14 @@ p {
 /* -------------- REGIÕES -------------- */
 
 /* ------------------------------------ PESSOAS ------------------------------------ */
+.Pessoa {
+    fill: black !important;
+}
+.Relacionamento {
+    stroke: black;
+    stroke-width: 1px;
+}
+
 .vidaAdao {
     fill: brown;
     background: brown;
